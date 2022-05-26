@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EmailService;
+using IdentityByExamples.CustomTokenProviders;
+using IdentityByExamples.CustomValidators;
 using IdentityByExamples.Factory;
 using IdentityByExamples.Models;
 using Microsoft.AspNetCore.Builder;
@@ -40,15 +42,30 @@ namespace IdentityByExamples
 
             services.AddIdentity<User, IdentityRole>(opt =>
                 {
-                    opt.Password.RequiredLength = 7;
+                    opt.Password.RequiredLength = 8;
                     opt.Password.RequireDigit = false;
                     opt.Password.RequireUppercase = false;
                     opt.User.RequireUniqueEmail = true;
+
+                    opt.SignIn.RequireConfirmedEmail = true;
+
+                    opt.Tokens.EmailConfirmationTokenProvider = "emailconfirmation";
+
+                    // default lockout policy
+                    opt.Lockout.AllowedForNewUsers = true;
+                    opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(2);
+                    opt.Lockout.MaxFailedAccessAttempts = 3;
                 })
                 .AddEntityFrameworkStores<ApplicationContext>()
-                .AddDefaultTokenProviders(); //add the required token providers to enable the token generation in our project. Also in order to set token time limit we added the one below
-            services.Configure<DataProtectionTokenProviderOptions>(opt =>
+                .AddDefaultTokenProviders() //add the required token providers to enable the token generation in our project. Also in order to set token time limit we added the one below
+                .AddTokenProvider<EmailConfirmationTokenProvider<User>>("emailconfirmation")
+                .AddPasswordValidator<CustomPasswordValidator<User>>();
+
+            services.Configure<DataProtectionTokenProviderOptions>(opt =>//this for reset password 
                opt.TokenLifespan = TimeSpan.FromHours(2));
+
+            services.Configure<EmailConfirmationTokenProviderOptions>(opt => // this for email confirmation, a custom token provider
+               opt.TokenLifespan = TimeSpan.FromDays(3));
 
             services.AddAutoMapper(typeof(Startup));
             //services.ConfigureApplicationCookie(o => o.LoginPath = "/Authentication/Login"); // if we want to change the default login url /account/login to smth else, write it here and add proper controller and views.
