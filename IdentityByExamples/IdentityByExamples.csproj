@@ -18,4 +18,8 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\2022108_SimpleEmailApp-Core5-codemaze\EmailApp\EmailService\EmailService.csproj" />
+  </ItemGroup>
+
 </Project>

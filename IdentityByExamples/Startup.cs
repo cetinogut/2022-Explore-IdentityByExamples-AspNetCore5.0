@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EmailService;
 using IdentityByExamples.Factory;
 using IdentityByExamples.Models;
 using Microsoft.AspNetCore.Builder;
@@ -27,6 +28,13 @@ namespace IdentityByExamples
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //added an existing email sender to this project with user secrets
+            var emailConfig = Configuration
+                .GetSection("EmailConfiguration")
+                .Get<EmailConfiguration>();
+            services.AddSingleton(emailConfig);
+            services.AddScoped<IEmailSender, EmailSender>();
+
             services.AddDbContext<ApplicationContext>(opts =>
                 opts.UseSqlServer(Configuration.GetConnectionString("sqlConnection")));
 
@@ -37,7 +45,11 @@ namespace IdentityByExamples
                     opt.Password.RequireUppercase = false;
                     opt.User.RequireUniqueEmail = true;
                 })
-                .AddEntityFrameworkStores<ApplicationContext>();
+                .AddEntityFrameworkStores<ApplicationContext>()
+                .AddDefaultTokenProviders(); //add the required token providers to enable the token generation in our project. Also in order to set token time limit we added the one below
+            services.Configure<DataProtectionTokenProviderOptions>(opt =>
+               opt.TokenLifespan = TimeSpan.FromHours(2));
+
             services.AddAutoMapper(typeof(Startup));
             //services.ConfigureApplicationCookie(o => o.LoginPath = "/Authentication/Login"); // if we want to change the default login url /account/login to smth else, write it here and add proper controller and views.
             services.AddScoped<IUserClaimsPrincipalFactory<User>, CustomClaimsFactory>();
