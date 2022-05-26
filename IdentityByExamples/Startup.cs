@@ -71,6 +71,16 @@ namespace IdentityByExamples
             //services.ConfigureApplicationCookie(o => o.LoginPath = "/Authentication/Login"); // if we want to change the default login url /account/login to smth else, write it here and add proper controller and views.
             services.AddScoped<IUserClaimsPrincipalFactory<User>, CustomClaimsFactory>();
 
+            services.AddAuthentication()
+                .AddGoogle("google", opt =>
+                {
+                    var googleAuth = Configuration.GetSection("Authentication:Google");
+
+                    opt.ClientId = googleAuth["ClientId"];
+                    opt.ClientSecret = googleAuth["ClientSecret"];
+                    opt.SignInScheme = IdentityConstants.ExternalScheme;
+                });
+
             services.AddControllersWithViews();
         }
 
